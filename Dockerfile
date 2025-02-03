@@ -1,7 +1,7 @@
 FROM python:3.12-alpine
 
 # Set the working directory inside the container
-WORKDIR /product_service
+WORKDIR /user_service
 
 # Copy the requirements file to the working directory
 COPY requirements.txt .
