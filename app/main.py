@@ -12,14 +12,15 @@ app = FastAPI(
     root_path='/api/user',
 )
 
-# CORS-Middleware hinzufügen
+origins = [
+    "http://localhost:3000",  # 🌍 Dein Frontend (z. B. React, Next.js)
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Binde den API-Router an die App
 app.include_router(router)
