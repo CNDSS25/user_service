@@ -13,7 +13,7 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost:3000",  # 🌍 Dein Frontend (z. B. React, Next.js)
+    "http://localhost:3000","http://localhost:80"
 ]
 
 app.add_middleware(
