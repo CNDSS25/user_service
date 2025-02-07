@@ -68,7 +68,7 @@ async def login(
         )
 
     # Session-ID erstellen (z. B. zufälliger Token oder JWT)
-    session_id = jwt_adapter.create_access_token(data={"sub": user.email})
+    session_id = jwt_adapter.create_access_token(data={"sub": user.email, "id": user.id})
 
     # Setze das Cookie in der Antwort
     response = JSONResponse(content={"message": "Login successful"})
@@ -91,7 +91,7 @@ async def logout(response: JSONResponse):
     response.delete_cookie("session_id")
     return response
 
-@router.post("/register/", response_model=User)
+@router.post("/register/", response_model=User , tags=["Users"])
 async def register_user(user: User, db_adapter=Depends(get_db_adapter)):
     """
     Registriert einen neuen Benutzer.
@@ -102,7 +102,7 @@ async def register_user(user: User, db_adapter=Depends(get_db_adapter)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/users/{user_id}", response_model=User)
+@router.get("/users/{user_id}", response_model=User, tags=["Users"])
 async def get_user(user_id: str, db_adapter=Depends(get_db_adapter)):
     """
     Ruft einen Benutzer anhand seiner ID ab.
@@ -113,7 +113,7 @@ async def get_user(user_id: str, db_adapter=Depends(get_db_adapter)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.put("/users/{user_id}", response_model=User)
+@router.put("/users/{user_id}", response_model=User, tags=["Users"])
 async def update_user(user_id: str, user_update: dict, db_adapter=Depends(get_db_adapter)):
     """
     Aktualisiert einen Benutzer anhand seiner ID.
@@ -124,7 +124,7 @@ async def update_user(user_id: str, user_update: dict, db_adapter=Depends(get_db
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.delete("/users/{user_id}")
+@router.delete("/users/{user_id}", tags=["Users"])
 async def delete_user(user_id: str, db_adapter=Depends(get_db_adapter)):
     """
     Löscht einen Benutzer anhand seiner ID.
