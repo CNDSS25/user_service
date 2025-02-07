@@ -68,7 +68,7 @@ async def login(
         )
 
     # Session-ID erstellen (z. B. zufälliger Token oder JWT)
-    session_id = jwt_adapter.create_access_token(data={"sub": user.email, "id": user.id})
+    session_id = jwt_adapter.create_access_token(data={"sub": user.email})
 
     # Setze das Cookie in der Antwort
     response = JSONResponse(content={"message": "Login successful"})
