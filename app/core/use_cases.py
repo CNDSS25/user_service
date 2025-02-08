@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from app.core.models import User
 from app.adapters.db_adapter import MongoDBAdapter
 from passlib.context import CryptContext
@@ -43,7 +44,7 @@ class UserUseCases:
         user.password = pwd_context.hash(user.password)
         return await self.db.create_user(user)
 
-    async def authenticate_user(self, email: str, password: str) -> User:
+    async def authenticate_user(self, email: EmailStr, password: str) -> User | None:
         """
         Authentifiziert einen Benutzer anhand von E-Mail und Passwort.
 

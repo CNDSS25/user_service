@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 from typing import Union
+from pydantic import EmailStr
 from app.core.models import User
-
 class MongoDBAdapter:
     """
     Adapter für die Kommunikation mit der MongoDB-Datenbank.
@@ -37,9 +37,9 @@ class MongoDBAdapter:
         user = await self.collection.find_one({"_id": ObjectId(user_id)})
         if not user:
             return None
-        return User(id=str(user["_id"]), **user)
+        return User(**user)
 
-    async def find_user_by_email(self, email: str) -> Union[User, None]:
+    async def find_user_by_email(self, email: EmailStr) -> Union[User, None]:
         """
         Sucht einen Benutzer anhand der E-Mail-Adresse.
 
@@ -49,7 +49,7 @@ class MongoDBAdapter:
         user = await self.collection.find_one({"email": email})
         if not user:
             return None
-        return User(id=str(user["_id"]), **user)
+        return User(**user)
 
     async def update_user(self, user_id: str, user_data: dict) -> Union[User, None]:
         """
@@ -66,7 +66,7 @@ class MongoDBAdapter:
         )
         if not result:
             return None
-        return User(id=str(result["_id"]), **result)
+        return result
 
     async def delete_user(self, user_id: str) -> bool:
         """
