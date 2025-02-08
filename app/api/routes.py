@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from app.core.models import User
+from app.core.models import User, UserDTO
 from app.core.use_cases import UserUseCases
 from fastapi.responses import JSONResponse
 from app.dependencies import get_db_adapter, get_jwt_adapter
@@ -18,32 +18,6 @@ async def verify_token(token: str, jwt_adapter=Depends(get_jwt_adapter)):
     try:
         payload = jwt_adapter.decode_access_token(token)
         return payload  # Gibt die Payload-Daten wie 'sub' (E-Mail) zurück
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
-
-
-@router.get("/users/me", response_model=User, tags=["Users"])
-async def get_current_user(
-    request: Request,
-    db_adapter=Depends(get_db_adapter),
-    jwt_adapter=Depends(get_jwt_adapter)
-):
-    session_id = request.cookies.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    try:
-        payload = jwt_adapter.decode_access_token(session_id)
-        email = payload.get("sub")
-        if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user = await db_adapter.find_user_by_email(email)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        # Gebe auch den Token zurück
-        return {**user.dict(), "session_token": session_id}
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
 
@@ -68,7 +42,7 @@ async def login(
         )
 
     # Session-ID erstellen (z. B. zufälliger Token oder JWT)
-    session_id = jwt_adapter.create_access_token(data={"sub": user.email})
+    session_id = jwt_adapter.create_access_token(data={"id": user.id, "sub": user.email})
 
     # Setze das Cookie in der Antwort
     response = JSONResponse(content={"message": "Login successful"})
@@ -91,6 +65,41 @@ async def logout(response: JSONResponse):
     response.delete_cookie("session_id")
     return response
 
+@router.get("/users/me", response_model=UserDTO, tags=["Users"])
+async def get_current_user(
+    request: Request,
+    db_adapter=Depends(get_db_adapter),
+    jwt_adapter=Depends(get_jwt_adapter)
+):
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    try:
+        payload = jwt_adapter.decode_access_token(session_id)
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = await db_adapter.find_user_by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Gebe auch den Token zurück
+        return {**user.dict(), "session_token": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
+
+@router.put("/users/{user_id}", response_model=User, tags=["Users"])
+async def update_user(user_id: str, user_update: dict, db_adapter=Depends(get_db_adapter)):
+    """
+    Aktualisiert einen Benutzer anhand seiner ID.
+    """
+    use_cases = UserUseCases(db=db_adapter)
+    try:
+        return await use_cases.update_user(user_id, user_update)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 @router.post("/register/", response_model=User , tags=["Users"])
 async def register_user(user: User, db_adapter=Depends(get_db_adapter)):
     """
@@ -113,17 +122,6 @@ async def get_user(user_id: str, db_adapter=Depends(get_db_adapter)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.put("/users/{user_id}", response_model=User, tags=["Users"])
-async def update_user(user_id: str, user_update: dict, db_adapter=Depends(get_db_adapter)):
-    """
-    Aktualisiert einen Benutzer anhand seiner ID.
-    """
-    use_cases = UserUseCases(db=db_adapter)
-    try:
-        return await use_cases.update_user(user_id, user_update)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
 @router.delete("/users/{user_id}", tags=["Users"])
 async def delete_user(user_id: str, db_adapter=Depends(get_db_adapter)):
     """
@@ -135,7 +133,8 @@ async def delete_user(user_id: str, db_adapter=Depends(get_db_adapter)):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}
 
-@router.get("/")
+@router.get("/",
+            tags=["Healthcheck"])
 async def root():
     """
     Test-Endpunkt, um sicherzustellen, dass die API läuft.
