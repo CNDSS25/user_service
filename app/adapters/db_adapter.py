@@ -2,6 +2,8 @@ from bson.objectid import ObjectId
 from typing import Union
 from pydantic import EmailStr
 from app.core.models import User
+
+
 class MongoDBAdapter:
     """
     Adapter für die Kommunikation mit der MongoDB-Datenbank.

@@ -12,6 +12,7 @@ app = FastAPI(
     root_path='/api/user',
 )
 
+#TODO: Make it hexagonal, pls
 origins = [
     "http://localhost:3000","http://localhost:80", "http://localhost"
 ]
